@@ -1,0 +1,189 @@
+// ***********************************************
+// Program Abstract
+// This program creates a screen saver with user entered data. The screen saver consists of
+// many blue circles that get drawn and easred after so much circles how been drawn.
+// ***********************************************
+
+// ***********************************************
+// Program Variable Dictionary
+// cCount is the count of the circles on screen.
+// c is the circle object.
+// queObj is the queue object.
+// pass is the Coord used to pass values to the queue.
+// cor is the Coord object that is used to recevie the removed queue object.
+// ***********************************************
+import java.util.ArrayList;
+import java.util.*;
+import java.awt.*;
+import java.applet.*;
+import java.awt.event.*;
+import javax.swing.JOptionPane;
+
+public class ch_30_A {
+
+    public static void main(String[] args)
+    	{
+
+		GfxApp gfx = new GfxApp();
+		gfx.setSize(800,600);
+		gfx.addWindowListener(new WindowAdapter() {public void
+			windowClosing(WindowEvent e) {System.exit(0);}});
+		gfx.show();
+
+    }
+}
+class GfxApp extends Frame
+{
+
+	private int circleCount, circleSize;
+	public Queue<Coord> queObj = new LinkedList<Coord>();
+
+	public GfxApp()
+	{
+		String inputValue = JOptionPane.showInputDialog("Enter the number of circles for the screen saver.");
+		String inputValue2 = JOptionPane.showInputDialog("Enter the diameter of the circles.");
+		circleCount = Integer.parseInt(inputValue);
+		circleSize  = Integer.parseInt(inputValue2);
+	}
+
+	class Coord
+	{
+		private int xPos;
+		private int yPos;
+
+		public Coord(int x, int y)
+		{
+			xPos = x;
+			yPos = y;
+		}
+	}
+
+	public void paint(Graphics g)
+	{
+		Coord intit = new Coord(400,300);
+		queObj.add(intit);
+		int incX = 5;
+		int incY = 5;
+		int cCount=1;
+		int timeDelay = 10;
+		Coord pass = new Coord(0,0);
+		Coord cor = new Coord(0,0);
+		Circle c = new Circle(g,circleSize,incX,incY,timeDelay);
+		for (int k = 1; k <= 2000; k++)
+		{
+
+			cCount++;
+			c.drawCircle(g);
+			c.hitEdge();
+
+			pass.xPos= c.getTLX();
+			pass.yPos= c.getTLY();
+
+			queObj.add(pass);
+			pass = new Coord(0,0);
+
+			if (cCount == circleCount+1)
+			{
+				cor = (Coord)queObj.remove();
+				c.eraseCircle(cor.xPos,cor.yPos,g);
+				cCount--;
+			}
+		}
+	}
+}
+
+class Circle
+{
+	private int tlX;		// top-left X coordinate
+	private int tlY;		// top-left Y coordinate
+	private int incX;		// increment movement of X coordinate
+	private int incY;		// increment movement of Y coordinate
+	private boolean addX;	// flag to determine add/subtract of increment for X
+	private boolean addY;	// flag to determine add/subtract of increment for Y
+	private int size;		// diameter of the circle
+	private int timeDelay;	// time delay until next circle is drawn
+
+	public Circle(Graphics g, int s, int x, int y, int td)
+	{
+		incX = x;
+		incY = y;
+		size = s;
+		addX = true;
+		addY = false;
+		tlX = 400;
+		tlY = 300;
+		timeDelay = td;
+	}
+
+	public void eraseCircle(int x, int y,Graphics g)
+	{
+		g.setColor(Color.white);
+		g.drawOval(x,y,size,size);
+	}
+
+	public int getTLX()
+	{// returns the value of the top-left corner X-value of the current circle drawn
+		return tlX;
+	}
+
+	public int getTLY()
+	{// returns the value of the top-left corner Y-value of the current circle drawn
+		return tlY;
+	}
+
+	public void delay(int n)
+	{
+		long startDelay = System.currentTimeMillis();
+		long endDelay = 0;
+		while (endDelay - startDelay < n)
+			endDelay = System.currentTimeMillis();
+	}
+
+	public void drawCircle(Graphics g)
+	{
+		g.setColor(Color.blue);
+		g.drawOval(tlX,tlY,size,size);
+		delay(timeDelay);
+		if (addX)
+			tlX+=incX;
+		else
+			tlX-=incX;
+		if (addY)
+			tlY+=incY;
+		else
+			tlY-=incY;
+	}
+
+	public void newData()
+	{
+		incX = (int) Math.round(Math.random() * 7 + 5);
+		incY = (int) Math.round(Math.random() * 7 + 5);
+	}
+
+	public void hitEdge()
+	{
+		boolean flag = false;
+		if (tlX < incX)
+		{
+			addX = true;
+			flag = true;
+		}
+		if (tlX > 800 - (size + incX))
+		{
+			addX = false;
+			flag = true;
+		}
+		if (tlY < incY + 30)  // The +30 is due to the fact that the title bar covers the top 30 pixels of the window
+		{
+			addY = true;
+			flag = true;
+		}
+		if (tlY > 600 - (size + incY))
+		{
+			addY = false;
+			flag = true;
+		}
+		if (flag)
+			newData();
+	}
+}
